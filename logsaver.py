@@ -6,7 +6,7 @@ import os
 import gzip
 import EmailComposer
 import json
-
+import hashlib
 
 ReverseSeverity = {
     0:'Emergencies',
@@ -34,11 +34,16 @@ MonthLookup = {
     b'Dec':12
 }
 
+def sha256(IN):
+ return hashlib.sha256(IN).hexdigest()
+
+
 class saver:
     def __init__(self, Config):
         self.config = Config
         self.Lookups = {}
         self.LookupEngines = {}
+        self.lastHash = ''
 
         self.Emailer = EmailComposer.emailer(Config)
         self.Emailer.start()
@@ -136,6 +141,11 @@ class saver:
             #print(self._parse(data))
 
             parsed = self._parse(data)
+            hsh = sha256(parsed['message'])
+            if hsh == self.lastHash:
+             print("Block",parsed['message'])
+             return
+            self.lastHash = hsh
 
             #Save to main log now
             stamp = parsed['stamp']
@@ -170,6 +180,9 @@ class saver:
 
                     elif ENGINE == 'email':
                         self.Emailer.appendUrgent(data[count:])
+                        file = gzip.open(root + '/' + i + '.gz','ab')
+                        file.write(data[count:] + b'\n')
+                        file.close()
 
                     else:
                         print("Flag",data[count:])
@@ -217,6 +230,7 @@ class saver:
                 }
         except Exception as E:
             print("Err2",E)
+            raise
 
 
         

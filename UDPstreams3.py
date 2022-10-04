@@ -9,7 +9,7 @@ from socket import socket, AF_INET, SOCK_DGRAM, gethostbyname, SO_SNDBUF, SOL_SO
 import threading
 import time
 
-__author__ = 'MegaKG'
+__author__ = 'Kaelan Grainger'
 __version__ = '3.0'
 
 

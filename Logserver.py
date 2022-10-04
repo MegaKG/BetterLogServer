@@ -49,23 +49,30 @@ class logserver:
         self.Run = True
         self.idcounter = 0
         self.saver = logsaver.saver(Args)
+        self.lock = False
 
     def injestlog(self,log):
+        #print(log)
         #Now we check the logs
         if not lv.check(log):
             print("REJECT",log)
             return
     
         #Now log it
+        while self.lock:
+         time.sleep(0.1)
+        self.lock = True
         self.saver.log(log)
-
+        self.lock = False
 
 
 
     def client(self,Connection,ID):
+        print("Connection Init",ID)
         SL = slidingInput(b'\n'[0],self.config['maxlen'])
         while True:
             data = Connection.getdat(1024)
+            print("IN",data)
             if (data == b'') or (data == False):
                 break
             else:
@@ -73,8 +80,9 @@ class logserver:
 
                 Lines = SL.getavailable()
                 for i in Lines:
+                    print(i)
                     self.injestlog(i)
-
+        print("Connection Died",ID)
 
 
     def tcpserver(self):
