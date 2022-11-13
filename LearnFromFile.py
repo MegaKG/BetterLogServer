@@ -4,8 +4,21 @@ import mysql.connector as mc
 import sys
 import Config
 import time
+import gzip
+
+def similarityScore(A,B):
+    Len = max([len(A),len(B)])
+    Min = min([len(A),len(B)])
+    Match = 0
+    for i in range(Min):
+        if A[i] == B[i]:
+            Match += 1
+    
+    return Match/Len
+
 
 def main():
+    Results = {}
     args = Config.LaunchArgs
 
     if len(sys.argv) < 3:
@@ -26,7 +39,7 @@ def main():
     print("Initialised Neural Link")
 
     #Open the File
-    f = open(sys.argv,'r')
+    f = gzip.open(sys.argv[1],'r')
     print("Found File")
 
     #Count all Lines
@@ -42,19 +55,37 @@ def main():
     print("Got Line Count",LineCount)
 
     #Now work through the file
+
+
     for i in range(LineCount):
         L = f.readline()
         print((i/LineCount)*100,"% Complete")
         print(L)
 
-        Res = ''
-        while True:
-            Res = input("\t(B)ad / (G)ood? ").lower()
-            if Res in ['g','b']:
+        Flag = False
+        for a in Results:
+            #print("Search",a,similarityScore(L,a))
+            if similarityScore(L,a) > 0.75:
+                YResult = Results[a][0]
+                NResult = Results[a][1]
+                Flag = True
                 break
 
-        YResult = int(Res == 'g')
-        NResult = int(Res == 'b')
+
+        if Flag:
+            pass
+        else:
+            Res = ''
+            while True:
+                Res = input("\t(B)ad / (G)ood? ").lower()
+                if Res in ['g','b']:
+                    break
+
+            YResult = int(Res == 'g')
+            NResult = int(Res == 'b')
+
+            Results[L] = [YResult,NResult]
+
 
         NL.train(L,YResult,NResult)
         print("Next")
@@ -66,12 +97,3 @@ def main():
 
 if __name__ == '__main__':
     main()
-
-                
-
-
-
-            
-
-
-
