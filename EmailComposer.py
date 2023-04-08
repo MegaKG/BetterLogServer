@@ -9,9 +9,10 @@ import datetime
 import mysql.connector as mc
 
 class emailer:
-    def __init__(self,config):
+    def __init__(self,config,subject):
         self.urgent = []
         self.config = config
+        self.subject = subject
         self.eml = SendMail3.emailer(
             config['smtpserver'],
             config['email'],
@@ -28,21 +29,6 @@ class emailer:
         for i in IN:
             Out += chr(i)
         return Out
-
-    def _generateWeekly(self):
-        self.Con = mc.connect(
-                host = self.config['dbhost'],
-                user = self.config['dbuser'],
-                passwd = self.config['dbpass'],
-                database = self.config['dbdata'],
-                port = self.config['dbport']
-            )
-        self.Cursor = self.Con.cursor()
-
-    def _generateDaily(self):
-        pass
-
-
 
     def _generateUrgent(self):
         TABLE = table(tr(th("Message")))
@@ -66,7 +52,7 @@ class emailer:
         )
 
         msg = MIMEMultipart('alternative')
-        msg['Subject'] = "Log Alert"
+        msg['Subject'] = self.subject
         msg['From'] = self.config['emailuser']
         conv = MIMEText(str(Message), 'html')
 

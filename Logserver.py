@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-from http import client
 import SendMail3 as sm
 import TCPstreams5 as tcp
 import UDPstreams3 as udp
@@ -46,6 +45,7 @@ class logserver:
     def __init__(self,Args):
         self.config = Args
         self.threads = []
+        self.threadFlags = []
         self.Run = True
         self.idcounter = 0
         self.saver = logsaver.saver(Args)
@@ -62,7 +62,13 @@ class logserver:
         while self.lock:
          time.sleep(0.1)
         self.lock = True
-        self.saver.log(log)
+
+        try:
+         self.saver.log(log)
+        except Exception as E:
+         print("Fatal: Main Saver Broke, Reinitialising")
+         del self.saver
+         self.saver = logsaver.saver(self.config)
         self.lock = False
 
 
@@ -72,7 +78,7 @@ class logserver:
         SL = slidingInput(b'\n'[0],self.config['maxlen'])
         while True:
             data = Connection.getdat(1024)
-            print("IN",data)
+            #print("IN",data)
             if (data == b'') or (data == False):
                 break
             else:
@@ -80,7 +86,7 @@ class logserver:
 
                 Lines = SL.getavailable()
                 for i in Lines:
-                    print(i)
+                    #print(i)
                     self.injestlog(i)
         print("Connection Died",ID)
 
@@ -94,6 +100,7 @@ class logserver:
             clientthread = threading.Thread(target=self.client,args=(con,self.idcounter),name='TCP Log Client Connection')
             clientthread.start()
             self.threads.append(clientthread)
+            self.threadFlags.append(1)
             self.idcounter += 1
 
     def udpserver(self):
@@ -105,6 +112,7 @@ class logserver:
             clientthread = threading.Thread(target=self.client,args=(con,self.idcounter),name='UDP Log Client Connection')
             clientthread.start()
             self.threads.append(clientthread)
+            self.threadFlags.append(1)
             self.idcounter += 1
 
     def run(self):
@@ -113,12 +121,14 @@ class logserver:
             tcpthread = threading.Thread(target=self.tcpserver,name="TCP Log Server")
             tcpthread.start()
             self.threads.append(tcpthread)
+            self.threadFlags.append(1)
 
         if self.config['udp']:
             print("Starting UDP Server")
             udpthread = threading.Thread(target=self.udpserver,name="UDP Log Server")
             udpthread.start()
             self.threads.append(udpthread)
+            self.threadFlags.append(1)
 
 
         ToKill = set()

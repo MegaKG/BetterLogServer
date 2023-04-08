@@ -105,7 +105,7 @@ class cache:
 
 
 class identifier:
-    def __init__(self,tablename,args):
+    def __init__(self,args,tablename):
         self.config = args
         self.tname = tablename
 
@@ -138,14 +138,16 @@ class identifier:
         for word in log.split(b' '):
             hash = hashlib.sha256(word).hexdigest()
             result = self.cache.getWord(hash)
-
+            #print("Match",word)
             #Ignore Missing lookups
             if result >= 0:
                 if result == 1:
                     #Set the Trigger
+                    #print("Trigger on",word)
                     Trigger = True
                 else:
                     #Ignore always
+                    print("Untrigger",word)
                     Trigger = False
                     break
         return Trigger

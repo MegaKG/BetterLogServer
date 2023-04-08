@@ -11,7 +11,7 @@ FLOOKUP = {
 }
 
 class identifier:
-    def __init__(self,tablename,args):
+    def __init__(self,args,tablename):
         self.config = args
         
 
