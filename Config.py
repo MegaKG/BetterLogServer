@@ -9,18 +9,22 @@ LaunchArgs = {
 
         'dbhost':'localhost',
         'dbuser':'loguser',
-        'dbpass':'logpassword',
+        'dbpass':'password',
         'dbdata':'LogDB',
         'dbport':3306,
         'HourlyTable':'Hourly',
 
 
-        'logOutDir':'./Logs',
+        'logOutDir':'/logserver/Logs',
 
 
         'Lookups':[
             {'type':'augmentedIdentifier', 'arguments':{'tablename':'AuthTable'}, 'engine':{'type':'fileEngine','arguments':{'filename':'AuthData'}}},
-            {'type':'dummyIdentifier', 'arguments':{}, 'engine':{'type':'fileEngine','arguments':{}}}    
+            {'type':'facultyIdentifier', 'arguments':{'tablename':'kernel'}, 'engine':{'type':'fileEngine','arguments':{'filename':'Kernel'}}},
+            {'type':'facultyIdentifier', 'arguments':{'tablename':'security'}, 'engine':{'type':'fileEngine','arguments':{'filename':'Security'}}},
+            {'type':'severityMinimumIdentifier', 'arguments':{'tablename':'critical'}, 'engine':{'type':'fileEngine','arguments':{'filename':'Important'}}},
+            {'type':'dummyIdentifier', 'arguments':{}, 'engine':{'type':'fileEngine','arguments':{}}},
+            {'type':'dummyIdentifier', 'arguments':{}, 'engine':{'type':'socketEngine','arguments':{}}}   
         ],
 
 

@@ -105,52 +105,70 @@ class cache:
 
 
 class identifier:
+    def _connect(self):
+        try:
+            self.db = mc.connect(
+                host = self.config['dbhost'],
+                user = self.config['dbuser'],
+                passwd = self.config['dbpass'],
+                database = self.config['dbdata'],
+                port = self.config['dbport']
+            )
+
+            self.cursor = self.db.cursor()
+
+            #Check if the Tables Exist
+            self.cursor.execute("SHOW TABLES")
+            TABLES = self.cursor.fetchall()
+
+            Exists = False
+            for i in TABLES:
+                if i[0] == self.tname:
+                    Exists = True
+            #Create it if needed
+            if not Exists:
+                self.cursor.execute('create table {} ( WHASH CHAR(64) NOT NULL, WTYPE INT NOT NULL, PRIMARY KEY (WHASH) );'.format(self.tname))
+
+            self.cache = cache(self.cursor,self.tname)
+
+        except Exception as E:
+            print("DB Connect Failure",E)
+            time.sleep(1)
+            self._connect()
+
     def __init__(self,args,tablename):
         self.config = args
         self.tname = tablename
 
-        self.db = mc.connect(
-                host = args['dbhost'],
-                user = args['dbuser'],
-                passwd = args['dbpass'],
-                database = args['dbdata'],
-                port = args['dbport']
-            )
+        self._connect()
 
-        self.cursor = self.db.cursor()
-
-        #Check if the Tables Exist
-        self.cursor.execute("SHOW TABLES")
-        TABLES = self.cursor.fetchall()
-
-        Exists = False
-        for i in TABLES:
-            if i[0] == self.tname:
-                Exists = True
-        #Create it if needed
-        if not Exists:
-            self.cursor.execute('create table {} ( WHASH CHAR(64) NOT NULL, WTYPE INT NOT NULL, PRIMARY KEY (WHASH) );'.format(self.tname))
-
-        self.cache = cache(self.cursor,self.tname)
+        
 
     def assessLog(self,log,faculty):
-        Trigger = False
-        for word in log.split(b' '):
-            hash = hashlib.sha256(word).hexdigest()
-            result = self.cache.getWord(hash)
-            #print("Match",word)
-            #Ignore Missing lookups
-            if result >= 0:
-                if result == 1:
-                    #Set the Trigger
-                    #print("Trigger on",word)
-                    Trigger = True
-                else:
-                    #Ignore always
-                    print("Untrigger",word)
-                    Trigger = False
-                    break
-        return Trigger
+        try:
+            Trigger = False
+            for word in log.split(b' '):
+                hash = hashlib.sha256(word).hexdigest()
+                result = self.cache.getWord(hash)
+                #print("Match",word)
+                #Ignore Missing lookups
+                if result >= 0:
+                    if result == 1:
+                        #Set the Trigger
+                        #print("Trigger on",word)
+                        Trigger = True
+                    else:
+                        #Ignore always
+                        print("Untrigger",word)
+                        Trigger = False
+                        break
+            return Trigger
+        
+        except Exception as E:
+            print("Log Error",E)
+            self._connect()
+            return self.assessLog(log,faculty)
+            
                 
 
 
