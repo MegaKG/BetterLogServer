@@ -3,6 +3,8 @@ import gzip
 import multiprocessing
 import os
 import sys
+import time
+
 
 def numericScore(Line):
     MonthLookup = {
@@ -43,35 +45,160 @@ def numericScore(Line):
         )
     return Stamp
 
+class cacheValue:
+    def __init__(self,Value):
+        self.Value = Value
+        self.Hits = 0
+
+    def fetch(self):
+        self.Hits += 1
+        return self.Value
+
+    def getHits(self):
+        return self.Hits
+
+    def decrScore(self):
+        self.Hits -= 1
+
+
+class accessCache:
+    def __init__(self,cacheSize=10000):
+        self.cache = {}
+        self.keycount = 0
+        self.minSize = cacheSize//10
+        self.maxSize = cacheSize
+
+    def searchCache(self,Key):
+        if Key in self.cache:
+            #print("Hit",Key)
+            return self.cache[Key].fetch()
+        else:
+            #print("Miss",Key)
+            return None
+
+    def cleanCache(self):
+        for Key in self.cache:
+                self.cache[Key].decrScore()
+
+        while len(self.cache) > self.minSize:
+            #Cull the lowest hit record
+            LowestKey = list(self.cache.keys())[0]
+            
+                
+            for Key in self.cache:
+                if self.cache[Key].getHits() < self.cache[LowestKey].getHits():
+                    LowestKey = Key
+
+            del self.cache[LowestKey]
+                
+
+    def insertCache(self,Key, Value):
+        if self.keycount > self.maxSize:
+            self.cleanCache()
+        self.cache[Key] = cacheValue(Value)
+                
+
+class timeCounter:
+    def __init__(self,interval=1):
+        self.start = time.time()
+        self.interval = interval
+        self.counters = {}
+        self.starts = {}
+        self.ends = {}
+
+    def update(self,Action="Default"):
+        if Action in self.counters:
+            self.counters[Action] += 1
+        else:
+            self.counters[Action] = 1
+
+        now = time.time()
+        if now - self.start > self.interval:
+            Str = ''
+            for Action in self.counters:
+                Str += Action + ': ' + str(self.counters[Action]/(now-self.start)) + ' (' + str((self.counters[Action]/sum(self.counters.values())) * 100) + '%' + ') ' 
+            print("Status: ",Str)
+
+            Str = ''
+            for Action in self.starts:
+                Str += Action + ': ' + str(self.ends[Action] - self.starts[Action]) + ' (' + str(100*((self.ends[Action] - self.starts[Action])/(max(self.ends.values()) - min(self.starts.values())))) + '%) '
+            print("Timing: " + Str)
+            
+            self.start = now
+            self.counters = {}
+            self.starts = {}
+            self.ends = {}
+
+    def startAction(self,Action="Default"):
+       self.starts[Action] = time.time()
+
+
+    def stopAction(self,Action="Default"):
+       self.ends[Action] = time.time()
+       self.update(Action)
+
+        
+
+            
+    
 
 def processFile(FileName):
+    TC = timeCounter()
+    
     f = gzip.open(FileName,'rb')
 
     LineArray = []
 
     #Read the positions of the start of every line
+    
     while True:
+        TC.startAction("IRead")
         LineArray.append(f.tell())
         if f.readline() == b'':
             break
+        TC.stopAction("IRead")
 
     f.seek(0)
 
+    #Create the cache
+    MyCache = accessCache(10000)
+
     def readIndex(Index):
-        try:
-            f.seek(Index)
-            line = f.readline()
-            return numericScore(line)
-        except Exception as E:
-            return -1
+        nonlocal TC
+        nonlocal MyCache
+
+        TC.startAction("Query")
+        QueryResult = MyCache.searchCache(Index)
+        TC.stopAction("Query")
+        
+        
+        if QueryResult is None:
+            try:
+                TC.startAction("FRead")
+                f.seek(Index)
+                line = f.readline()
+                Score = numericScore(line)
+                TC.stopAction("FRead")
+
+                TC.startAction("Insert")
+                MyCache.insertCache(Index,Score)
+                TC.stopAction("Insert")
+                return Score
+            except Exception as E:
+                return -1
+        else:
+            return QueryResult
 
     print("Read File Positions",FileName)
 
     #Here we do a quicksort
     g = gzip.open(FileName + '.tmp','wb')
 
+    
+    
     def quickSort(Array):
         #print("Array",len(Array))
+        nonlocal TC
         if len(Array) <= 1:
             return Array
         
@@ -94,14 +221,17 @@ def processFile(FileName):
             return quickSort(LowBucket) + SameBucket + quickSort(HighBucket)
         return []
 
-    
+    #TC.startAction("Sort")
     SortedIndexes = quickSort(LineArray)
+    #TC.stopAction("Sort")
     print("Sorted The Indexes",FileName)
 
     for key in SortedIndexes:
+        TC.startAction("Copy")
         f.seek(key)
         Line = f.readline()
         g.write(Line)
+        TC.startAction("Copy")
 
     print("Done",FileName)
 
