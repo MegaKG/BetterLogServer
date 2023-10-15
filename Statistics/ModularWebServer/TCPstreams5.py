@@ -1,4 +1,5 @@
-#!/usr/bin/env python3
+#GNU General Public License v3.0
+#Code by MegaKG
 import socket
 import time
 
@@ -6,6 +7,10 @@ defaultport = 5000
 
 class clientCon:
   def __init__(self,Host,Port):
+    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    conn.connect((Host, Port))
+    self.conn = conn
+
     CurrentUTC_time = time.time()
     self.info = {
       'TotalSent':0,
@@ -14,12 +19,6 @@ class clientCon:
       'LastPacket':CurrentUTC_time,
       'Alive':True
     }
-
-    self.conn = None
-    conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    conn.connect((Host, Port))
-    self.conn = conn
-
     
   def senddat(self,bindat):
       try:
@@ -57,8 +56,7 @@ class clientCon:
       return GOT
     
   def close(self):
-    if self.conn != None:
-     self.conn.close()
+    self.conn.close()
     self.info['Alive'] = False
 
   def isAlive(self):

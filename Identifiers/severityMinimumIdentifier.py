@@ -11,22 +11,20 @@ FLOOKUP = {
 }
 
 class identifier:
-    def __init__(self,args,tablename):
-        self.config = args
-        
+    def __init__(self,severity):
 
-        #In this case, the tablename is the faculty
-        if tablename.lower() in FLOOKUP:
-            self.severity = FLOOKUP[tablename]
+        #In this case, the severity is the faculty
+        if severity.lower() in FLOOKUP:
+            self.severity = FLOOKUP[severity]
         else:
-            self.severity = int(tablename)
+            self.severity = int(severity)
 
 
         
     def assessLog(self,log,priority):
         faculty = int(priority/8)
         severity = int(((priority/8) - faculty) * 8)
-        if severity == self.severity:
+        if severity <= self.severity:
             return True
         return False
         

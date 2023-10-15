@@ -1,24 +1,23 @@
 #!/usr/bin/env python3
 import time
 import threading
-import SendMail3
-from HTML_PY import *
+import Engines.SendMail3 as SendMail3
+from Engines.HTML_PY import *
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 import datetime
 import mysql.connector as mc
 
 class emailer:
-    def __init__(self,config,subject):
+    def __init__(self,server,email,user,password,port,subject):
         self.urgent = []
-        self.config = config
         self.subject = subject
         self.eml = SendMail3.emailer(
-            config['smtpserver'],
-            config['email'],
-            config['emailuser'],
-            config['emailpass'],
-            config['emailport']
+            server,
+            email,
+            user,
+            password,
+            port
         )
 
     def appendUrgent(self,record):

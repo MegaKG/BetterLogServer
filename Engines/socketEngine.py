@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import threading
-import UNIXstreams4
+import Engines.UNIXstreams4 as UNIXstreams4
 
 class saver:
     def serverAcceptor(self):
@@ -14,16 +14,15 @@ class saver:
             self.clientCons.append(CON)
 
 
-    def __init__(self,Config,filename = '/run/logserver'):
-        self.filename = filename
-        self.Config = Config
+    def __init__(self,path = '/run/logserver'):
+        self.path = path
 
         self.clientCons = []
 
-        self.Server = UNIXstreams4.newServer(filename)
+        self.Server = UNIXstreams4.newServer(path)
         self.acceptor = threading.Thread(target=self.serverAcceptor)
         self.acceptor.start()
 
-    def saveLog(self,Log,MessageStamp):
+    def saveLog(self,Log,MessageStamp,Faculty):
         for con in self.clientCons:
             con.senddat(Log + b'\n')

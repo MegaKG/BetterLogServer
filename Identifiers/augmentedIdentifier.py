@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
-import keywordIdentifier
-import perceptronIdentifier
+import Identifiers.keywordIdentifier as kId
+import Identifiers.perceptronIdentifier as pId
 
 
 class identifier:
-    def __init__(self,args,tablename):
-        self.config = args
+    def __init__(self,dbhost,dbuser,dbpass,dbdatabase,dbport,tablename):
         self.tname = tablename
 
-        self.kwIdent = keywordIdentifier.identifier(args,self.tname + '_KW')
-        self.pcIdent = perceptronIdentifier.identifier(args,self.tname + '_PC')
+        self.kwIdent = kId.keywordIdentifier.identifier(dbhost,dbuser,dbpass,dbdatabase,dbport,self.tname + '_KW')
+        self.pcIdent = pId.perceptronIdentifier.identifier(dbhost,dbuser,dbpass,dbdatabase,dbport,self.tname + '_PC')
 
         
     def assessLog(self,log,faculty):

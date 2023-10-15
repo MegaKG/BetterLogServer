@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import sys
-import UNIXstreams4
-sock = '/run/logserver'
+import UNIXstreams4 as UNIXstreams4
+sock = '/var/run/logserver'
 
 
 if len(sys.argv) > 1:

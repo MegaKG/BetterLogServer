@@ -114,6 +114,7 @@ class timeCounter:
 
         now = time.time()
         if now - self.start > self.interval:
+          try:
             Str = ''
             for Action in self.counters:
                 Str += Action + ': ' + str(self.counters[Action]/(now-self.start)) + ' (' + str((self.counters[Action]/sum(self.counters.values())) * 100) + '%' + ') ' 
@@ -123,11 +124,13 @@ class timeCounter:
             for Action in self.starts:
                 Str += Action + ': ' + str(self.ends[Action] - self.starts[Action]) + ' (' + str(100*((self.ends[Action] - self.starts[Action])/(max(self.ends.values()) - min(self.starts.values())))) + '%) '
             print("Timing: " + Str)
+          except:
+            pass
             
-            self.start = now
-            self.counters = {}
-            self.starts = {}
-            self.ends = {}
+          self.start = now
+          self.counters = {}
+          self.starts = {}
+          self.ends = {}
 
     def startAction(self,Action="Default"):
        self.starts[Action] = time.time()
@@ -161,7 +164,7 @@ def processFile(FileName):
     f.seek(0)
 
     #Create the cache
-    MyCache = accessCache(10000)
+    MyCache = accessCache(100000)
 
     def readIndex(Index):
         nonlocal TC

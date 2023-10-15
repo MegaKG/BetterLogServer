@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import NeuralLoggerLib as NLL
+import Identifiers.NeuralLoggerLib as NLL
 import mysql.connector as mc
 import time
 
@@ -21,11 +21,11 @@ class identifier:
     def _connect(self):
         try:
             self.db = mc.connect(
-                host = self.config['dbhost'],
-                user = self.config['dbuser'],
-                passwd = self.config['dbpass'],
-                database = self.config['dbdata'],
-                port = self.config['dbport']
+                host = self.dbhost,
+                user = self.dbuser,
+                passwd = self.dbpass,
+                database = self.dbdatabase,
+                port = self.dbport
             )
 
             self.cursor = self.db.cursor()
@@ -47,8 +47,12 @@ class identifier:
 
         
 
-    def __init__(self,args,tablename):
-        self.config = args
+    def __init__(self,dbhost,dbuser,dbpass,dbdatabase,dbport,tablename):
+        self.dbhost = dbhost
+        self.dbuser = dbuser
+        self.dbpass = dbpass
+        self.dbdatabase = dbdatabase
+        self.dbport = dbport
         self.tname = tablename
 
         

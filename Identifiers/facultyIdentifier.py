@@ -11,15 +11,12 @@ FLOOKUP = {
 }
 
 class identifier:
-    def __init__(self,args,tablename):
-        self.config = args
-        
-
-        #In this case, the tablename is the faculty
-        if tablename.lower() in FLOOKUP:
-            self.myfaculty = FLOOKUP[tablename]
+    def __init__(self,faculty):
+        #In this case, the faculty is the faculty
+        if faculty.lower() in FLOOKUP:
+            self.myfaculty = FLOOKUP[faculty]
         else:
-            self.myfaculty = int(tablename)
+            self.myfaculty = int(faculty)
 
 
         
